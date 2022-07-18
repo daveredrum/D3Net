@@ -1,0 +1,213 @@
+general:
+  task: # train, test, eval
+  manual_seed: 123
+  dataset: ScanRefer
+  model: pointgroup
+  solver: PointGroupSolver
+  config: conf/pointgroup_scannet.yaml
+  output_root: outputs/
+  experiment: pointgroup_captioning # TODO
+  monitor: val_score/cider
+  monitor_mode: max
+
+
+data:
+  module: lib.dataset
+  dataset: PipelineDataset
+  downstream: speaker # speaker or listener
+  
+  data_root: dataset
+  file_suffix: .pth
+
+  split: 
+  mini: 
+
+  classes: 20
+  ignore_label: -1 # ignored classes
+  requires_gt_mask: False
+
+  scale: 50   # voxel_size = 1 / scale, scale 50(2cm)
+  batch_size: 4
+  num_workers: 8
+  full_scale: [128, 512]
+  max_num_point: 250000
+  max_num_instance: 128
+  mode: 4 # 4=mean
+
+  transform:
+    jitter: True #True
+    flip: True #True
+    rot: True #True
+    
+  requires_bbox: True # ALWAYS TRUE
+
+  max_spk_len: 30
+  max_lis_len: 126
+  overlaid_threshold: 0.5
+  min_iou_threshold: 0.25
+  num_ori_bins: 6
+  num_des_per_scene: 8
+
+  extra_ratio: 0.0
+
+
+model:
+  module: model
+  classname: PointGroup
+  
+  # input_channel: 131 # multiview + normals
+  m: 16 # 16 or 32
+  blocks: [1, 2, 3, 4, 5, 6, 7]
+  cluster_blocks: [1, 2]
+  block_residual: True
+  block_reps: 2
+
+  use_coords: True
+  use_color: False
+  use_multiview: True
+  use_normal: True
+
+  crop_bbox: True # ALWAYS TRUE
+  pred_bbox: False
+
+  use_lang_classifier: True
+  use_bidir: False
+
+  no_detection: False
+  no_grounding: True
+  no_captioning: False
+
+  match_type: Transformer
+  loss_type: cross_entropy
+
+  num_bbox_class: 18
+  num_heading_bin: 1
+  num_size_cluster: 18
+  max_num_proposal: 128
+
+  clear_cache_steps: 1
+
+  num_graph_steps: 2
+  num_locals: 10
+  
+  use_relation: True
+  use_orientation: True
+
+  use_checkpoint: 
+  resume_epoch: 
+  pretrained_path: 
+  pretrained_module: [] 
+  pretrained_module_path: 
+  
+  pretrained_detector: pointgroup.pth
+  pretrained_speaker: 
+  pretrained_listener: 
+
+  freeze_detector: False
+  freeze_speaker: False
+  freeze_listener: True
+
+
+train:
+  epochs: 50
+  num_sanity_val_steps: -1
+  log_every_n_steps: 10
+  check_val_every_n_epoch: 1
+
+  optim: 
+    classname: AdamW # Adam or SGD
+    lr: 0.0005
+    momentum: 0.9 # SGD
+    weight_decay: 0.00001 # SGD
+  
+  step_epoch: 480 #384
+  multiplier: 0.5
+  save_freq: 16  # also eval_freq
+  loss_weight: [1.0, 1.0, 1.0, 1.0, 1.0] # semantic_loss, offset_norm_loss, offset_dir_loss, score_loss, bbox_loss (if applies)
+
+  fg_thresh: 0.75
+  bg_thresh: 0.25
+
+  score_scale: 50 # the minimal voxel size is 2cm
+  score_fullscale: 14
+  score_mode: 4 # mean
+
+  beam_size: 1
+  sample_topn: 1
+
+  use_rl: False
+  ref_reward_weight: 1
+  lang_reward_weight: 1
+  listener_reward_weight: 0.1
+  caption_reward_weight: 1
+
+  apply_word_erase: True
+
+eval:
+  beam_size: 1
+  sample_topn: 1
+  max_des_len: 30
+  min_iou_threshold: 0.5
+
+  repeat: 1
+  force: True
+
+
+cluster:
+  ### point grouping
+  cluster_radius: 0.03
+  cluster_meanActive: 50
+  cluster_shift_meanActive: 300
+  cluster_npoint_thre: 50
+
+  prepare_epochs: -1
+  freeze_backbone: False
+
+test:
+  test_epoch: 384
+  test_seed: 567
+
+  TEST_NMS_THRESH: 0.3
+  TEST_SCORE_THRESH: 0.09
+  TEST_NPOINT_THRESH: 100
+
+  requires_visualize: True
+
+
+evaluation:
+  model_utils_module: data.scannet.model_util_scannet
+  gt_class_name: NYU20_CLASS_NAME
+  gt_class_idx: NYU20_CLASS_IDX
+
+  task:
+  use_model:
+
+
+log:
+  use_console_log: True
+  verbose: 1 #30
+  meter_names:
+    - iter_time
+    - semantic_loss
+    - offset_norm_loss
+    - offset_dir_loss
+    - score_loss
+    - mask_ious
+    - total_loss
+  tb_names:
+    - semantic_loss
+    - offset_norm_loss
+    - offset_dir_loss
+    - score_loss
+    - total_loss
+  bbox_names:
+    - center_loss
+    - heading_cls_loss
+    - heading_reg_loss
+    - size_cls_loss
+    - size_reg_loss
+    - sem_cls_loss
+    - bbox_loss
+    - pred_crop_bbox_iou
+    - crop_bbox_iou
+    - pred_bbox_iou

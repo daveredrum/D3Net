@@ -1,0 +1,54 @@
+ROOT_PATH: /rhome/dchen/D3NetRelease #TODO
+CLUSTER_PATH: /cluster/balrog/dchen/pointgroup-minkowski #TODO -> change the related path if you're not on cluster
+DATA_PATH: ${CLUSTER_PATH}/data
+OUTPUT_PATH: ${ROOT_PATH}/outputs
+
+SCANNETV2_PATH:
+  raw_scans: /canis/Datasets/ScanNet/public/v2/scans
+  extracted_scans: /local-scratch/qiruiw/dataset/scannet/scans
+
+  dir: ${DATA_PATH}/scannet
+  split_scans: /local-scratch/qiruiw/dataset/scannet/split_scans 
+  split_data: ${SCANNETV2_PATH.dir}/split_data #TODO
+  split_gt: ${SCANNETV2_PATH.dir}/split_gt
+  meta_data: ${SCANNETV2_PATH.dir}/meta_data
+
+  scene_list: ${SCANNETV2_PATH.meta_data}/scannetv2.txt
+  train_list: ${SCANNETV2_PATH.meta_data}/scannetv2_train.txt
+  val_list: ${SCANNETV2_PATH.meta_data}/scannetv2_val.txt
+  test_list: ${SCANNETV2_PATH.meta_data}/scannetv2_test.txt
+  combine_file: ${SCANNETV2_PATH.meta_data}/scannetv2-labels.combined.tsv
+
+  frames: ${DATA_PATH}/frames_square
+
+  enet_weights: ${DATA_PATH}/scannetv2_enet.pth
+  enet_features: ${DATA_PATH}/enet_features
+  multiview_features: ${DATA_PATH}/enet_feats_maxpool.hdf5
+
+  gt_features: ${DATA_PATH}/VoteNet_GT_features_200 # TODO -> prepare this
+
+SCAN2CAD: ${DATA_PATH}/Scan2CAD_dataset/scannet_instance_rotations.json
+
+SCANREFER_PATH:
+  glove_pickle: ${DATA_PATH}/glove.p
+  glove_numpy: ${DATA_PATH}/glove_trimmed_ScanRefer.npy
+
+  vocabulary: ${DATA_PATH}/ScanRefer_vocabulary.json
+
+  train_split: ${DATA_PATH}/ScanRefer_filtered_train.json
+  val_split: ${DATA_PATH}/ScanRefer_filtered_val.json
+  test_split: ${DATA_PATH}/ScanRefer_filtered_test.json
+
+REFERIT3D_PATH:
+  glove_pickle: ${DATA_PATH}/glove.p
+  glove_numpy: ${DATA_PATH}/glove_trimmed_ReferIt3D.npy
+
+  vocabulary: ${DATA_PATH}/nr3d_vocabulary.json
+
+  train_split: ${DATA_PATH}/nr3d_train.json
+  val_split: ${DATA_PATH}/nr3d_val.json
+
+  syn_train_split: ${DATA_PATH}/sr3d+_train.json
+  syn_val_split: ${DATA_PATH}/sr3d+_val.json
+
+PRETRAINED_PATH: ${ROOT_PATH}/pretrained

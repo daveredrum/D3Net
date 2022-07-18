@@ -1,0 +1,15 @@
+# ninja log v5
+1	19924	1632814827341680613	/rhome/dchen/pointgroup-minkowski/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/pointgroup_ops.o	214b3ac8f070cc4a
+0	23520	1632814830925660789	/rhome/dchen/pointgroup-minkowski/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/pointgroup_ops_api.o	7cd882345bc09310
+80	15156	1632814893169316208	/rhome/dchen/pointgroup-minkowski/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/pointgroup_ops.o	71080c11397d784c
+80	19965	1632814897973289592	/rhome/dchen/pointgroup-minkowski/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/pointgroup_ops_api.o	32415621275e3ea2
+80	20129	1632814898153288595	/rhome/dchen/pointgroup-minkowski/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/cuda.o	90ad28d0d69cfa4f
+65	23837	1632829266026758073	/rhome/dchen/pointgroup-minkowski/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/cuda.o	bc42f4b77e97e2fe
+65	32428	1632829274602710561	/rhome/dchen/pointgroup-minkowski/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/pointgroup_ops.o	f3bba2a1517439d2
+65	34410	1632829276582699591	/rhome/dchen/pointgroup-minkowski/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/pointgroup_ops_api.o	a7bd36f1ea0278c9
+1	23396	1633419554541913554	/rhome/dchen/SSL/pointgroup-grounding/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/cuda.o	116a2bfd2635d4be
+1	26949	1633419558105893010	/rhome/dchen/SSL/pointgroup-grounding/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/pointgroup_ops.o	3a37b045079ac0a
+0	29650	1633419560801877469	/rhome/dchen/SSL/pointgroup-grounding/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/pointgroup_ops_api.o	7e5aebb3b9eb94e3
+105	13376	1633427598343637136	/rhome/dchen/SSL/pointgroup-grounding/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/cuda.o	be27ea64c0aaba9d
+105	16230	1633427601239620382	/rhome/dchen/SSL/pointgroup-grounding/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/pointgroup_ops.o	a92bcb207ff37ca
+104	20299	1633427605295596916	/rhome/dchen/SSL/pointgroup-grounding/lib/pointgroup_ops/build/temp.linux-x86_64-3.8/src/pointgroup_ops_api.o	d38350f524844b09

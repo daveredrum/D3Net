@@ -1,0 +1,17 @@
+plyfile
+opencv-python
+tensorboardX
+tensorboard
+easydict
+tqdm
+h5py
+matplotlib
+imageio
+pandas
+omegaconf
+cmake>=3.13.2
+notebook
+jsonlines
+pyrender
+trimesh==3.9.14
+pytorch-lightning 
