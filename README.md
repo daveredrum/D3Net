@@ -115,8 +115,10 @@ python scripts/eval.py --folder <output_folder> --task captioning
 Prepare the fine-tuned PointGroup weights and speaker checkpoint for next steps:
 
 ```shell
+# prepare detector weights
 python scripts/prepare_weights.py --path <path_to_checkpoint>  --config conf/pointgroup-speaker.yaml --model detector --model_name detector
 
+# prepare speaker weights
 python scripts/prepare_weights.py --path <path_to_checkpoint>  --config conf/pointgroup-speaker.yaml --model speaker --model_name speaker
 ```
 
