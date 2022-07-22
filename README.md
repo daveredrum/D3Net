@@ -26,7 +26,7 @@ pip install -r requirements.txt
 
 As we implement PointGroup by ourselves, it is required to install the [Minkowski Engine](https://github.com/NVIDIA/MinkowskiEngine) first in order to run our code. Please see the [installation instructions](https://github.com/NVIDIA/MinkowskiEngine/wiki/Installation) for more details.
 
-__Before moving on to the next step, please don't forget to set the relevant project/data root path in `lib/path.yaml`.__
+__Before moving on to the next step, please don't forget to set the relevant project/data root path in `conf/path.yaml`.__
 
 ### Data preparation
 1. Download the ScanRefer dataset and unzip it under `data/`. 
@@ -44,7 +44,7 @@ python prepare_scannet.py
     
     b. Download and decompress [the extracted ScanNet frames (~13GB)](http://kaldir.vc.in.tum.de/3dsis/scannet_train_images.zip).
 
-    c. Change the data paths in `config.py` marked with __TODO__ accordingly.
+    c. Change the data paths in `conf/path.yaml` marked with __TODO__ accordingly.
 
     d. Extract the ENet features:
     ```shell
@@ -69,7 +69,7 @@ __And don't forget to refer to [Pytorch Geometric](https://github.com/rusty1s/py
 
 ## Usage
 
-For the stage-wise training, we need to prepare module weights stated as follows.
+For the stage-wise training, we need to prepare module weights stated as follows. If you would like to play around our [checkpoint](https://www.dropbox.com/s/nsrbcfeihmh2bhw/D3Net.7z?dl=0), please download and unzip it under `outputs`.
 
 ### Prepare PointGroup detector
 
@@ -106,6 +106,11 @@ For evaluating the model (CIDEr@0.5IoU), please run the following script - You s
 ```shell
 python scripts/eval.py --folder <output_folder> --task captioning
 ```
+
+> NOTE: We recommend compiling the `box_intersection.pyx` for faster evaluation:
+> ```shell
+> cd lib/utils && python cython_compile.py build_ext --inplace
+> ```
 
 Prepare the fine-tuned PointGroup weights and speaker checkpoint for next steps:
 
@@ -146,17 +151,20 @@ python scripts/train.py --config conf/pointgroup-speaker-listener.yaml
 For evaluating the model performance, please run the following script - Note that since we're using reinforcement learning, you'll expect some variance in the trained model:
 
 ```shell
+# detection
 python scripts/eval.py --folder <output_folder> --task detection
 
+# grounding
 python scripts/eval.py --folder <output_folder> --task grounding
 
+# captioning
 python scripts/eval.py --folder <output_folder> --task captioning
 ```
 
 ## Citation
 If you found our work helpful, please kindly cite the relavant papers:
 ```bibtex
-@misc{chen2021d3net,
+@misc{chen2022d3net,
    title={D3Net: A Speaker-Listener Architecture for Semi-supervised Dense Captioning and Visual Grounding in RGB-D Scans}, 
    author={Dave Zhenyu Chen and Qirui Wu and Matthias Nießner and Angel X. Chang},
    year={2021},

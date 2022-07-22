@@ -282,6 +282,7 @@ class PipelineDataset(Dataset):
             data["istrain"] = np.array(1) if self.split == "train" else np.array(0)
             data["annotated"] = np.array(annotated_list).astype(np.int64)
             data["chunk_ids"] = np.array(chunk_id_list).astype(np.int64)
+            data["scene_id"] = scene_id
 
             # for bbox regression - DEPRECATED
             data["center_label"] = instance_bboxes.astype(np.float32)[:,0:3] # (num_instance, 3) for GT box center XYZ
@@ -387,8 +388,7 @@ class PipelineDataset(Dataset):
                 for scene_id in tqdm(self.scan_list)}
 
         # load language features
-        self.glove = np.load(self.cfg["{}_PATH".format(self.name.upper())].glove_numpy)
-        self.vocabulary = self._build_vocabulary(self.max_des_len)
+        self.vocabulary, self.glove = self._build_vocabulary()
         self.lang, self.lang_ids = self._tranform_des(self.max_des_len)
         self.organized = self._organize_data()
 
@@ -430,16 +430,29 @@ class PipelineDataset(Dataset):
 
         return objectid2label
 
-    def _build_vocabulary(self, max_len):
+    def _build_vocabulary(self):
         vocab_path = self.cfg["{}_PATH".format(self.name.upper())].vocabulary
         if os.path.exists(vocab_path):
+            print("loading vocabulary from {}...".format(vocab_path))
             vocabulary = json.load(open(vocab_path))
+
+            # HACK this won't be necessary if the vocabulary is newly built
+            if "special_tokens" not in vocabulary:
+                speical_tokens = {
+                    "bos_token": "sos",
+                    "eos_token": "eos",
+                    "unk_token": "unk",
+                    "pad_token": "pad_"
+                }
+                vocabulary["special_tokens"] = speical_tokens
         else:
             if self.split == "train":
+                print("building vocabulary...")
+                glove = pickle.load(self.cfg["{}_PATH".format(self.name.upper())].glove_pickle)
                 train_data = [d for d in self.raw_data if d["object_id"] != "SYNTHETIC"]
-                all_words = chain(*[data["token"][:max_len] for data in train_data])
+                all_words = chain(*[data["token"][:self.max_des_len] for data in train_data])
                 word_counter = Counter(all_words)
-                word_counter = sorted([(k, v) for k, v in word_counter.items() if k in self.glove], key=lambda x: x[1], reverse=True)
+                word_counter = sorted([(k, v) for k, v in word_counter.items() if k in glove], key=lambda x: x[1], reverse=True)
                 word_list = [k for k, _ in word_counter]
 
                 # build vocabulary
@@ -455,27 +468,38 @@ class PipelineDataset(Dataset):
                     word2idx[w] = i
                     idx2word[i] = w
 
-                vocab = {
-                    "word2idx": word2idx,
-                    "idx2word": idx2word
+                speical_tokens = {
+                    "bos_token": "sos",
+                    "eos_token": "eos",
+                    "unk_token": "unk",
+                    "pad_token": "pad_"
                 }
-                json.dump(vocab, open(vocab_path, "w"), indent=4)
+                vocabulary = {
+                    "word2idx": word2idx,
+                    "idx2word": idx2word,
+                    "special_tokens": speical_tokens
+                }
+                json.dump(vocabulary, open(vocab_path, "w"), indent=4)
 
-                vocabulary = vocab
 
         emb_mat_path = self.cfg["{}_PATH".format(self.name.upper())].glove_numpy
-        if not os.path.exists(emb_mat_path):
-            emb_pickle_path = self.cfg["{}_PATH".format(self.name.upper())].glove_pickle
-            all_glove = pickle.load(open(emb_pickle_path, "rb"))
+        if os.path.exists(emb_mat_path):
+            embeddings = np.load(emb_mat_path)
+        else:
+            all_glove = pickle.load(open(self.cfg["{}_PATH".format(self.name.upper())].glove_pickle, "rb"))
 
-            glove_trimmed = np.zeros((len(self.vocabulary["word2idx"]), 300))
-            for word, idx in self.vocabulary["word2idx"].items():
-                emb = all_glove[word]
-                glove_trimmed[int(idx)] = emb
+            embeddings = np.zeros((len(vocabulary["word2idx"]), 300))
+            for word, idx in vocabulary["word2idx"].items():
+                try:
+                    emb = all_glove[word]
+                except KeyError:
+                    emb = all_glove["unk"]
+                    
+                embeddings[int(idx)] = emb
 
-            np.save(emb_mat_path, glove_trimmed)
+            np.save(emb_mat_path, embeddings)
 
-        return vocabulary
+        return vocabulary, embeddings
 
     def _tranform_des(self, max_len):
         lang = {}

@@ -145,6 +145,7 @@ def eval_detection(cfg, dataloader, model):
     with torch.no_grad():
         for data_dict in tqdm(dataloader):
             for key in data_dict.keys():
+                if isinstance(batch_data[key], list): continue
                 data_dict[key] = data_dict[key].cuda()
 
             torch.cuda.empty_cache()
@@ -195,6 +196,7 @@ def eval_grounding(cfg, dataset, dataloader, model):
             predictions = {}
             for data_dict in tqdm(dataloader):
                 for key in data_dict:
+                    if isinstance(batch_data[key], list): continue
                     data_dict[key] = data_dict[key].cuda()
 
                 torch.cuda.empty_cache()
@@ -424,58 +426,80 @@ def eval_grounding(cfg, dataset, dataloader, model):
     print("\nlanguage classification accuracy: {}".format(np.mean(lang_acc)))
 
 def eval_captioning(cfg, dataset, dataloader, model):
-    outputs = []
-    with torch.no_grad():
-        for data_dict in tqdm(dataloader):
-            for key in data_dict.keys():
-                if isinstance(data_dict[key][0], tuple): continue
-                if isinstance(data_dict[key][0], dict): continue
-                if isinstance(data_dict[key][0], list): continue
+    min_ious = [0, 0.25, 0.5]
+    for min_iou in min_ious:
+        print("evaluating for min IOU {}".format(min_iou))
 
-                data_dict[key] = data_dict[key].cuda()
+        # check if predictions exist
+        phase = "val"
+        experiment_root = os.path.join(cfg.OUTPUT_PATH, cfg.general.experiment.upper())
+        pred_path = os.path.join(experiment_root, "pred_{}_{}.json".format(phase, str(model.device.index)))
+        if min_iou == min_ious[0] or not os.path.exists(pred_path):
+            # if not os.path.exists(pred_path):
+            print("generating predictions for min IOU {}".format(min_iou))
 
-            torch.cuda.empty_cache()
+            outputs = []
+            with torch.no_grad():
+                for data_dict in tqdm(dataloader):
+                    for key in data_dict.keys():
+                        if isinstance(data_dict[key][0], tuple): continue
+                        if isinstance(data_dict[key][0], dict): continue
+                        if isinstance(data_dict[key][0], list): continue
+                        if isinstance(data_dict[key], list): continue
 
-            ##### prepare input and forward
-            data_dict = model.detector.feed(data_dict, 1)
-            data_dict = model.speaker(data_dict, use_tf=False, is_eval=True, beam_opt=model.beam_opt)
+                        data_dict[key] = data_dict[key].cuda()
 
-            outs = eval_caption_step(
-                cfg=cfg,
-                data_dict=data_dict,
-                dataset_chunked_data=dataset.chunked_data,
-                dataset_vocabulary=dataset.vocabulary
-            )
-            outputs.append(outs)
+                    torch.cuda.empty_cache()
 
-    # aggregate captioning outputs
-    candidates = {}
-    for outs in outputs:
-        for key, value in outs.items():
-            if key not in candidates:
-                candidates[key] = value
+                    ##### prepare input and forward
+                    data_dict = model.detector.feed(data_dict, 1)
+                    data_dict = model.speaker(data_dict, use_tf=False, is_eval=True, beam_opt=model.beam_opt)
 
-    # evaluate captions
-    print("==> computing scores...")
-    bleu, cider, rouge, meteor = eval_caption_epoch(
-        candidates=candidates,
-        cfg=cfg,
-        device=model.device,
-        phase="val",
-        max_len=cfg.eval.max_des_len,
-        min_iou=cfg.eval.min_iou_threshold
-    )
+                    outs = eval_caption_step(
+                        cfg=cfg,
+                        data_dict=data_dict,
+                        dataset_chunked_data=dataset.chunked_data,
+                        dataset_vocabulary=dataset.vocabulary
+                    )
+                    outputs.append(outs)
 
-    # report
-    print("\n----------------------Evaluation-----------------------")
-    print("[BLEU-1] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(bleu[0][0], max(bleu[1][0]), min(bleu[1][0])))
-    print("[BLEU-2] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(bleu[0][1], max(bleu[1][1]), min(bleu[1][1])))
-    print("[BLEU-3] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(bleu[0][2], max(bleu[1][2]), min(bleu[1][2])))
-    print("[BLEU-4] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(bleu[0][3], max(bleu[1][3]), min(bleu[1][3])))
-    print("[CIDEr] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(cider[0], max(cider[1]), min(cider[1])))
-    print("[ROUGE-L] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(rouge[0], max(rouge[1]), min(rouge[1])))
-    print("[METEOR] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(meteor[0], max(meteor[1]), min(meteor[1])))
-    print()
+            # aggregate captioning outputs
+            candidates = {}
+            for outs in outputs:
+                for key, value in outs.items():
+                    if key not in candidates:
+                        candidates[key] = value
+
+            # store
+            with open(pred_path, "w") as f:
+                json.dump(candidates, f, indent=4)
+
+        else:
+                print("loading predictions...")
+                with open(pred_path) as f:
+                    candidates = json.load(f)
+
+        # evaluate captions
+        print("==> computing scores...")
+        bleu, cider, rouge, meteor = eval_caption_epoch(
+            candidates=candidates,
+            cfg=cfg,
+            device=model.device,
+            phase="val",
+            max_len=cfg.eval.max_des_len,
+            min_iou=min_iou
+        )
+
+        # report
+        print("\n----------------------Evaluation-----------------------")
+        print("[BLEU-1] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(bleu[0][0], max(bleu[1][0]), min(bleu[1][0])))
+        print("[BLEU-2] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(bleu[0][1], max(bleu[1][1]), min(bleu[1][1])))
+        print("[BLEU-3] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(bleu[0][2], max(bleu[1][2]), min(bleu[1][2])))
+        print("[BLEU-4] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(bleu[0][3], max(bleu[1][3]), min(bleu[1][3])))
+        print("[CIDEr] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(cider[0], max(cider[1]), min(cider[1])))
+        print("[ROUGE-L] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(rouge[0], max(rouge[1]), min(rouge[1])))
+        print("[METEOR] Mean: {:.4f}, Max: {:.4f}, Min: {:.4f}".format(meteor[0], max(meteor[1]), min(meteor[1])))
+        print()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
