@@ -119,19 +119,6 @@ def predict(args, cfg, dataset, dataloader, model):
         data_dict = model.detector.feed(data_dict)
         data_dict = model.listener(data_dict)
 
-        # _, data_dict = get_loss(
-        #     data_dict,
-        #     use_oracle=model.no_detection,
-        #     grounding=not model.no_grounding,
-        #     use_lang_classifier=model.use_lang_classifier,
-        #     use_rl=False
-        # )
-        # data_dict = get_eval(
-        #     data_dict,
-        #     grounding=not model.no_grounding,
-        #     use_lang_classifier=model.use_lang_classifier
-        # )
-
         # predicted bbox
         pred_bbox_corners = data_dict["proposal_bbox_batched"] # (B, num_proposal, 8, 3)
 
