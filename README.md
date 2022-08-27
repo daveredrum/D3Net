@@ -9,7 +9,7 @@ Recent studies on dense captioning and visual grounding in 3D have achieved impr
 Please also check out the project website [here](https://daveredrum.github.io/D3Net/index.html).
 
 For additional detail, please see the D3Net paper:  
-"[D3Net: A Unified Speaker-Listener Architecture for 3D Dense Captioning and Visual Grounding](https://arxiv.org/abs/2012.02206)"  
+"[D3Net: A Unified Speaker-Listener Architecture for 3D Dense Captioning and Visual Grounding](https://arxiv.org/abs/2112.01551)"  
 by [Dave Zhenyu Chen](https://daveredrum.github.io/), [Qirui Wu](), [Matthias Nießner](https://www.niessnerlab.org/members/matthias_niessner/profile.html) and [Angel X. Chang](https://angelxuanchang.github.io/)  
 from [Technical University of Munich](https://www.tum.de/en/) and [Simon Fraser University](https://www.sfu.ca/).
 
